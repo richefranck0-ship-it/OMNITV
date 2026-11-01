@@ -1,18 +1,75 @@
-{% extends "base.html" %}{% block title %}{{ channel.name }} · OMNITV{% endblock %}{% block content %}
-<section class="page"><a href="{{ url_for('channel_page', slug=channel.slug) }}">← Page de la chaîne</a><h1>{{ channel.name }}</h1>
-{% if channel.is_live %}<span class="live-pill">● EN DIRECT</span><div class="player" id="live-player"><p id="player-state">Connexion au direct…</p></div>
-<script type="module">
-import { Room, RoomEvent } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';
-const state=document.getElementById('player-state'), box=document.getElementById('live-player');
-try {
- const response=await fetch('{{ url_for("live_token", slug=channel.slug) }}',{method:'POST'});
- const data=await response.json(); if(!response.ok) throw new Error(data.error||'Direct indisponible');
- const room=new Room(); room.on(RoomEvent.TrackSubscribed,(track)=>{const el=track.attach();el.autoplay=true;el.playsInline=true;box.appendChild(el);});
- room.on(RoomEvent.Disconnected,()=>{state.textContent='La diffusion est terminée.';});
- await room.connect(data.serverUrl,data.token); state.remove();
-} catch(e){state.textContent='Le direct est momentanément indisponible : '+e.message;}
+{% extends "base.html" %}
+{% from "_ad_slot.html" import ad_slot %}
+{% block title %}{{ channel.name }} · OMNITV{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="watch-heading">
+    {% if channel.logo_url %}<img class="watch-logo" src="{{ channel.logo_url }}" alt="Logo {{ channel.name }}">{% endif %}
+    <div><p class="eyebrow">CHAÎNE OMNITV</p><h1>{{ channel.name }}</h1><p>{{ channel.description or '' }}</p></div>
+  </div>
+  <div class="watch-layout">
+    <div class="watch-main">
+      {% if channel.is_live %}
+        <span class="live-pill">● EN DIRECT</span>
+        <div class="player" id="live-player"><p id="player-state">Connexion au direct…</p></div>
+        <script type="module">
+        import { Room, RoomEvent } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';
+        const state=document.getElementById('player-state'), box=document.getElementById('live-player');
+        try {
+          const response=await fetch('{{ url_for("live_token", slug=channel.slug) }}',{method:'POST'});
+          const data=await response.json(); if(!response.ok) throw new Error(data.error||'Direct indisponible');
+          const room=new Room();
+          room.on(RoomEvent.TrackSubscribed,(track)=>{const el=track.attach();el.autoplay=true;el.playsInline=true;box.appendChild(el);});
+          room.on(RoomEvent.Disconnected,()=>{state.textContent='La diffusion est terminée.';});
+          await room.connect(data.serverUrl,data.token); state.remove();
+        } catch(e){state.textContent='Le direct est momentanément indisponible : '+e.message;}
+        </script>
+      {% elif channel.stream_url %}
+        <div class="player video-player" data-stream-url="{{ channel.stream_url|e }}">
+          <video id="channel-video" controls playsinline preload="metadata"></video>
+          <div class="player-message" id="channel-player-message">Chargement du flux…</div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+        <script>
+        (() => {
+          const box=document.querySelector('[data-stream-url]'), video=document.getElementById('channel-video');
+          const msg=document.getElementById('channel-player-message');
+          let url=box.dataset.streamUrl;
+          const yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+          if(yt){const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+yt[1];frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);return;}
+          if(/\.m3u8(?:$|\?)/i.test(url)){
+            if(video.canPlayType('application/vnd.apple.mpegurl')) video.src=url;
+            else if(window.Hls && Hls.isSupported()){const hls=new Hls();hls.loadSource(url);hls.attachMedia(video);hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)msg.textContent='Impossible de lire ce flux HLS.';});}
+            else msg.textContent='Ce navigateur ne prend pas en charge ce flux HLS.';
+          } else if(/\.(mp4|webm|ogg)(?:$|\?)/i.test(url)){video.src=url;}
+          else {const frame=document.createElement('iframe');frame.src=url;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);}
+          video.addEventListener('loadeddata',()=>msg.hidden=true);
+          video.addEventListener('error',()=>{msg.textContent='Flux non lisible. Vérifie le lien ou son autorisation d’intégration.';});
+        })();
+        </script>
+      {% else %}
+        <div class="notice">Cette chaîne n'est pas en direct actuellement et aucun flux vidéo n'est configuré.</div>
+      {% endif %}
+      <p><a class="btn secondary" href="{{ url_for('channel_page', slug=channel.slug) }}">Page et archives de la chaîne</a></p>
+    </div>
+    <div class="watch-sidebar">{{ ad_slot(ads, 'all', 'channel-side-ad-slot') }}</div>
+  </div>
+  <h2>Programmes archivés</h2>
+  <div class="cards">
+    {% for v in videos %}<a class="channel" href="{{ url_for('film', video_id=v.id) }}"><b>{{ v.title }}</b><small>{{ v.description or '' }}</small><span>Regarder →</span></a>
+    {% else %}<p class="muted">Aucune ancienne vidéo publiée pour le moment.</p>{% endfor %}
+  </div>
+</section>
+<script>
+document.querySelectorAll('.omni-ad-slot').forEach(slot=>{
+  const cards=[...slot.querySelectorAll('.omni-ad-card')]; if(cards.length<2)return;
+  let index=0; setInterval(()=>{cards[index].hidden=true;index=(index+1)%cards.length;cards[index].hidden=false;},900000);
+});
+document.querySelectorAll('.ad-video').forEach(box=>{
+  const url=box.dataset.adUrl||'';
+  const yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  if(yt){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+yt[1];f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;box.appendChild(f);}
+  else {const v=document.createElement('video');v.src=url;v.controls=true;v.muted=true;v.playsInline=true;v.preload='none';box.appendChild(v);}
+});
 </script>
-{% else %}<div class="notice">Cette chaîne n'est pas en direct actuellement. Consulte ses anciennes vidéos ci-dessous.</div>{% endif %}
-<p>{{ channel.description or '' }}</p><p><a class="btn secondary" href="{{ request.url }}">Partager cette chaîne</a></p>
-<h2>Anciennes vidéos</h2><div class="cards">{% for v in videos %}<a class="ad" href="{{ v.video_url }}" target="_blank" rel="noopener"><b>{{ v.title }}</b><small>{{ v.description or '' }}</small><span>Regarder →</span></a>{% else %}<p class="muted">Aucune ancienne vidéo publiée pour le moment.</p>{% endfor %}</div>
-</section>{% endblock %}
+{% endblock %}

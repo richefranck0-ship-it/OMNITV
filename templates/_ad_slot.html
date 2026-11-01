@@ -1,0 +1,24 @@
+{% macro ad_slot(ads, placement='all', slot_id='omni-ad-slot') -%}
+{% set selected_ads = ads|selectattr('placement', 'equalto', placement)|list %}
+{% if placement == 'all' %}
+  {% set selected_ads = ads|rejectattr('placement', 'equalto', 'end')|list %}
+{% endif %}
+{% if selected_ads %}
+<aside class="omni-ad-slot" id="{{ slot_id }}" aria-label="Publicité sponsorisée">
+  <div class="ad-slot-heading"><span>PUBLICITÉ SPONSORISÉE</span><small>Partenaire OMNITv</small></div>
+  <div class="ad-rotator">
+  {% for ad in selected_ads %}
+    <article class="omni-ad-card" {% if not loop.first %}hidden{% endif %}>
+      <div class="ad-video" data-ad-url="{{ ad.video_url }}"></div>
+      <div class="ad-copy">
+        <b>{{ ad.company_name or ad.title or 'Partenaire OMNITv' }}</b>
+        {% if ad.description %}<p>{{ ad.description }}</p>{% endif %}
+        {% if ad.target_url %}<a class="ad-cta" href="{{ ad.target_url }}" target="_blank" rel="noopener noreferrer">Découvrir l'annonceur ↗</a>{% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+  {% if selected_ads|length > 1 %}<small class="ad-rotation-note">Les annonces changent automatiquement toutes les 15 minutes.</small>{% endif %}
+</aside>
+{% endif %}
+{%- endmacro %}

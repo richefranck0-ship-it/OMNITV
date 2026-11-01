@@ -1,6 +1,11 @@
-{% extends "base.html" %}{% block title %}{{ channel.name }} · OMNITV{% endblock %}{% block content %}
+{% extends "base.html" %}{% from "_ad_slot.html" import ad_slot %}{% block title %}{{ channel.name }} · OMNITV{% endblock %}{% block content %}
 <section class="page">
-<div class="channel-hero">{% if channel.logo_url %}<img src="{{ channel.logo_url }}" alt="Logo {{ channel.name }}">{% endif %}<div><p class="eyebrow">CHAÎNE OMNITV</p><h1>{{ channel.name }}</h1><p>{{ channel.description or '' }}</p>{% if channel.is_live %}<span class="live-pill">● EN DIRECT</span>{% else %}<span class="muted">Hors direct</span>{% endif %}</div></div>
+<div class="channel-hero">{% if channel.logo_url %}<img src="{{ channel.logo_url }}" alt="Logo {{ channel.name }}">{% else %}<div class="channel-logo-placeholder">▶</div>{% endif %}<div><p class="eyebrow">CHAÎNE OMNITV</p><h1>{{ channel.name }}</h1><p>{{ channel.description or '' }}</p>{% if channel.is_live %}<span class="live-pill">● EN DIRECT</span>{% else %}<span class="muted">Hors direct</span>{% endif %}</div></div>
 <div class="actions"><a class="btn" href="{{ url_for('watch', channel_id=channel.id) }}">{% if channel.is_live %}Regarder le direct{% else %}Voir la chaîne{% endif %}</a><button class="secondary" onclick="navigator.clipboard.writeText(location.href).then(()=>alert('Lien copié !'))">Copier le lien de la chaîne</button></div>
-<h2>Anciennes vidéos</h2><div class="cards">{% for v in videos %}<a class="ad" href="{{ v.video_url }}" target="_blank" rel="noopener"><b>{{ v.title }}</b><small>{{ v.description or '' }}</small><span>Regarder →</span></a>{% else %}<p class="muted">Aucune vidéo archivée.</p>{% endfor %}</div>
-</section>{% endblock %}
+<div class="channel-content-grid"><div><h2>Films et anciennes vidéos</h2><div class="cards">{% for v in videos %}<a class="channel" href="{{ url_for('film', video_id=v.id) }}"><b>{{ v.title }}</b><small>{{ v.description or '' }}</small><span>Regarder →</span></a>{% else %}<p class="muted">Aucune vidéo archivée.</p>{% endfor %}</div></div><aside>{{ ad_slot(ads, 'all', 'archive-ad-slot') }}</aside></div>
+</section>
+<script>
+document.querySelectorAll('.omni-ad-slot').forEach(slot=>{const cards=[...slot.querySelectorAll('.omni-ad-card')];if(cards.length<2)return;let i=0;setInterval(()=>{cards[i].hidden=true;i=(i+1)%cards.length;cards[i].hidden=false;},900000);});
+document.querySelectorAll('.ad-video').forEach(box=>{const url=box.dataset.adUrl||'',yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);if(yt){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+yt[1];f.allowFullscreen=true;box.appendChild(f);}else{const v=document.createElement('video');v.src=url;v.controls=true;v.muted=true;v.playsInline=true;v.preload='none';box.appendChild(v);}});
+</script>
+{% endblock %}
