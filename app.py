@@ -82,7 +82,14 @@ def watch(channel_id):
     channel = next((c for c in channels if str(c.get("id")) == str(channel_id)), None)
     if not channel:
         abort(404)
-    return render_template("watch.html", channel=channel)
+    videos = []
+    if db_required():
+        try:
+            videos = supabase.table("videos").select("*").eq("channel_id", channel["id"]).eq("is_public", True).order("created_at", desc=True).execute().data or []
+        except Exception:
+            videos = []
+    ads = rows("advertisements", 100, is_active=True)
+    return render_template("watch.html", channel=channel, videos=videos, ads=ads)
 
 @app.route("/programme")
 def programme():
@@ -219,21 +226,44 @@ def review_submission(submission_id):
 @app.route("/admin/ad", methods=["POST"])
 @admin_required
 def add_ad():
+    if not db_required():
+        return redirect(url_for("admin"))
+    company = request.form.get("company_name", "").strip()
+    video_url = request.form.get("video_url", "").strip()
+    target_url = request.form.get("target_url", "").strip()
+    placement = request.form.get("placement", "all")
+    if placement not in ("all", "end"):
+        placement = "all"
     payload = {
-        "company_name": request.form.get("company_name", "").strip(),
-        "title": request.form.get("company_name", "").strip(),
-        "video_url": request.form.get("video_url", "").strip(),
-        "target_url": request.form.get("target_url", "").strip(),
-        "contact_url": request.form.get("target_url", "").strip(),
-        "placement": request.form.get("placement", "home"),
+        "company_name": company,
+        "title": company,
+        "description": request.form.get("description", "").strip(),
+        "video_url": video_url,
+        "target_url": target_url,
+        "contact_url": target_url,
+        "placement": placement,
         "active": True,
         "is_active": True
     }
+    if not company or not video_url or not target_url:
+        flash("Remplis le nom, le lien vidéo et le lien de l'annonceur.", "error")
+    else:
+        try:
+            supabase.table("advertisements").insert(payload).execute()
+            flash("Publicité ajoutée et activée.", "success")
+        except Exception:
+            flash("Ajout impossible. Exécute la nouvelle migration publicitaire dans Supabase.", "error")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/ad/<ad_id>/delete", methods=["POST"])
+@admin_required
+def delete_ad(ad_id):
     try:
-        supabase.table("advertisements").insert(payload).execute()
-        flash("Publicité ajoutée.", "success")
+        supabase.table("advertisements").delete().eq("id", ad_id).execute()
+        flash("Publicité supprimée.", "success")
     except Exception:
-        flash("Ajout impossible. Vérifie les colonnes de advertisements.", "error")
+        flash("Suppression de la publicité impossible.", "error")
     return redirect(url_for("admin"))
 
 
@@ -249,7 +279,21 @@ def channel_page(slug):
             videos = supabase.table("videos").select("*").eq("channel_id", channel["id"]).eq("is_public", True).order("created_at", desc=True).execute().data or []
         except Exception:
             videos = []
-    return render_template("channel_page.html", channel=channel, videos=videos)
+    ads = rows("advertisements", 100, is_active=True)
+    return render_template("channel_page.html", channel=channel, videos=videos, ads=ads)
+
+@app.route("/film/<video_id>")
+def film(video_id):
+    if not db_required():
+        abort(503)
+    try:
+        video = supabase.table("videos").select("*").eq("id", video_id).eq("is_public", True).single().execute().data
+        channel = supabase.table("channels").select("*").eq("id", video["channel_id"]).single().execute().data
+    except Exception:
+        abort(404)
+    ads = rows("advertisements", 100, is_active=True)
+    return render_template("film.html", video=video, channel=channel, ads=ads)
+
 
 @app.route("/studio/<slug>", methods=["GET", "POST"])
 def studio(slug):

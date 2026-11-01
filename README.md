@@ -58,3 +58,26 @@ L'administrateur peut ajouter les anciennes vidéos via une URL hébergée (ex. 
 - Il faut un compte/service LiveKit configuré : Flask seul ne transporte pas les flux vidéo.
 - Les offres gratuites ont des limites de minutes/bande passante et peuvent évoluer ; vérifier les quotas et tarifs du fournisseur avant de diffuser à grande échelle.
 - Tester le direct sur deux appareils et sur le téléphone cible avant d'ouvrir au public.
+
+
+## Publicités dans les lecteurs et lecture des flux
+
+Cette version ajoute :
+- un emplacement publicitaire à côté du lecteur (sous le lecteur sur petit écran) ;
+- rotation automatique des annonces disponibles toutes les 15 minutes ;
+- un emplacement de publicité de fin pour les vidéos d'archives MP4/HLS et les vidéos YouTube intégrées ;
+- l'administration pour ajouter et supprimer les annonces ;
+- la lecture des flux HLS `.m3u8`, MP4/WebM et des liens YouTube intégrables ;
+- un affichage des logos en `contain` pour éviter de les recadrer.
+
+### Migration Supabase supplémentaire
+
+Après avoir déployé cette version, exécuter une fois `supabase/advertising_player_migration.sql` dans le SQL Editor de Supabase. Les variables Render `SUPABASE_URL` et `SUPABASE_ANON_KEY` doivent également être configurées pour que les annonces et les chaînes soient chargées.
+
+### Formats et limites
+
+- Pour un flux HLS, le serveur qui héberge le flux doit autoriser le partage CORS avec le domaine OMNITv.
+- Les liens MP4 doivent pointer directement vers le fichier vidéo.
+- Les liens YouTube doivent autoriser l'intégration.
+- La détection automatique de fin est prise en charge pour MP4/WebM/HLS et YouTube. Pour d'autres lecteurs intégrés, le fournisseur peut ne pas exposer l'événement de fin.
+- La rotation des publicités se fait dans le navigateur du visiteur, toutes les 15 minutes, tant que la page reste ouverte.
