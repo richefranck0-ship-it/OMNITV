@@ -1,13 +1,51 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>{% block title %}OMNITv — THE WORLD. ONE SCREEN.{% endblock %}</title>
+
 <meta name="description" content="OMNITv : regardez la télévision en direct, les films, les séries et vos programmes de divertissement.">
-<meta name="google-site-verification" content="Oy5s9otOe8sxFdI3n0xWRFn3Cn5y5QoJQltjBD0jGxk" />
+
+<meta name="google-site-verification" content="Oy5s9otOe8sxFdI3n0xWRFn3Cn5y5QoJQltjBD0jGxk">
 <meta name="theme-color" content="#07142f">
+
 <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='favicon.png') }}">
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
-<body><header class="top"><a class="brand" href="{{ url_for('home') }}">OMNI<span>TV</span></a><nav><a href="{{ url_for('direct') }}">Direct</a><a href="{{ url_for('programme') }}">Programme TV</a><a href="{{ url_for('broadcaster') }}">Diffuseur</a><a href="{{ url_for('advertising') }}">Publicité</a><a href="{{ url_for('admin_login') }}">Admin</a></nav></header>
-<main>{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
-<footer>OMNITV · THE WORLD. ONE SCREEN. · <a href="mailto:{{ 'richefranck0@gmail.com' }}">Nous contacter</a></footer></body></html>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="top">
+    <a class="brand" href="{{ url_for('home') }}">OMNI<span>TV</span></a>
+
+    <nav>
+        <a href="{{ url_for('direct') }}">Direct</a>
+        <a href="{{ url_for('programme') }}">Programme TV</a>
+        <a href="{{ url_for('broadcaster') }}">Diffuseur</a>
+        <a href="{{ url_for('advertising') }}">Publicité</a>
+    </nav>
+</header>
+
+<main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    OMNITv · THE WORLD. ONE SCREEN. ·
+    <a href="mailto:richefranck0@gmail.com">Nous contacter</a>
+    <p>© 2026 OMNITv — Fait Franck DTN</p>
+</footer>
+
+</body>
+</html>
