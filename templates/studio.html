@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block title %}Studio diffuseur · {{ channel.name }}{% endblock %}{% block content %}
+<section class="page narrow"><p class="eyebrow">STUDIO DIFFUSEUR</p><h1>{{ channel.name }}</h1>
+{% if not authorized %}
+<p>Entre le code privé fourni par l'administrateur pour accéder au studio de cette chaîne.</p>
+<form method="post" class="form"><label>Code diffuseur<input type="password" name="broadcast_code" required autocomplete="current-password"></label><button>Accéder au studio</button></form>
+{% else %}
+<p class="notice">Tu es connecté au studio de cette chaîne. Autorise la caméra et le microphone lorsque le navigateur le demande.</p>
+<div class="preview" id="preview"><span>L'aperçu de ta caméra ou de ton écran apparaîtra ici.</span></div>
+<div class="actions"><button id="camera">Démarrer le direct caméra</button><button class="secondary" id="screen">Partager l'écran</button><button class="danger" id="stop" disabled>Arrêter le direct</button></div>
+<p id="status" class="muted">Prêt à diffuser.</p>
+<p>Page publique : <a href="{{ url_for('channel_page', slug=channel.slug) }}">{{ request.host_url.rstrip("/") }}{{ url_for('channel_page', slug=channel.slug) }}</a></p>
+<script type="module">
+import { Room, RoomEvent, createLocalTracks, createLocalScreenTracks } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';
+let room=null, tracks=[];
+const status=document.getElementById('status'), preview=document.getElementById('preview');
+const camera=document.getElementById('camera'), screen=document.getElementById('screen'), stop=document.getElementById('stop');
+async function start(mode){
+ try {
+  camera.disabled=true; screen.disabled=true; status.textContent='Connexion au serveur vidéo…';
+  const res=await fetch('{{ url_for("live_token", slug=channel.slug) }}',{method:'POST'});
+  const data=await res.json(); if(!res.ok) throw new Error(data.error||'Configuration LiveKit manquante');
+  if(!data.canPublish) throw new Error('Accès diffuseur refusé. Reconnecte-toi au studio.');
+  room=new Room(); await room.connect(data.serverUrl,data.token);
+  tracks = mode==='screen' ? await createLocalScreenTracks({audio:true}) : await createLocalTracks({audio:true,video:true});
+  for(const track of tracks){await room.localParticipant.publishTrack(track);const el=track.attach();el.autoplay=true;el.muted=true;el.playsInline=true;preview.replaceChildren(el);}
+  await fetch('{{ url_for("live_status", slug=channel.slug) }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_live:true})});
+  status.textContent=mode==='screen'?'Tu partages ton écran en direct.':'Tu es en direct depuis ta caméra.';
+  stop.disabled=false;
+ } catch(e){status.textContent='Erreur : '+e.message;camera.disabled=false;screen.disabled=false;if(room){room.disconnect();room=null;}}
+}
+async function end(){
+ try{if(room){tracks.forEach(t=>{try{room.localParticipant.unpublishTrack(t);t.stop();}catch(e){}});room.disconnect();room=null;}
+ await fetch('{{ url_for("live_status", slug=channel.slug) }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_live:false})});
+ preview.innerHTML='<span>Diffusion arrêtée.</span>';status.textContent='Le direct est terminé.';
+ }finally{camera.disabled=false;screen.disabled=false;stop.disabled=true;}
+}
+camera.addEventListener('click',()=>start('camera'));screen.addEventListener('click',()=>start('screen'));stop.addEventListener('click',end);
+</script>
+{% endif %}
+</section>{% endblock %}

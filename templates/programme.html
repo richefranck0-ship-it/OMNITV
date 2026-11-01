@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block content %}<section class="page"><h1>Programme TV</h1>{% for s in schedules %}<div class="line"><b>{{ s.title or 'Programme' }}</b><span>{{ s.start_time or '' }}</span><small>{{ s.channel_name or '' }}</small></div>{% else %}<p class="muted">Le programme sera publié ici dès que les horaires seront ajoutés.</p>{% endfor %}</section>{% endblock %}

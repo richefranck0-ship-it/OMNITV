@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}{{ channel.name }} · OMNITV{% endblock %}{% block content %}
+<section class="page"><a href="{{ url_for('channel_page', slug=channel.slug) }}">← Page de la chaîne</a><h1>{{ channel.name }}</h1>
+{% if channel.is_live %}<span class="live-pill">● EN DIRECT</span><div class="player" id="live-player"><p id="player-state">Connexion au direct…</p></div>
+<script type="module">
+import { Room, RoomEvent } from 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs';
+const state=document.getElementById('player-state'), box=document.getElementById('live-player');
+try {
+ const response=await fetch('{{ url_for("live_token", slug=channel.slug) }}',{method:'POST'});
+ const data=await response.json(); if(!response.ok) throw new Error(data.error||'Direct indisponible');
+ const room=new Room(); room.on(RoomEvent.TrackSubscribed,(track)=>{const el=track.attach();el.autoplay=true;el.playsInline=true;box.appendChild(el);});
+ room.on(RoomEvent.Disconnected,()=>{state.textContent='La diffusion est terminée.';});
+ await room.connect(data.serverUrl,data.token); state.remove();
+} catch(e){state.textContent='Le direct est momentanément indisponible : '+e.message;}
+</script>
+{% else %}<div class="notice">Cette chaîne n'est pas en direct actuellement. Consulte ses anciennes vidéos ci-dessous.</div>{% endif %}
+<p>{{ channel.description or '' }}</p><p><a class="btn secondary" href="{{ request.url }}">Partager cette chaîne</a></p>
+<h2>Anciennes vidéos</h2><div class="cards">{% for v in videos %}<a class="ad" href="{{ v.video_url }}" target="_blank" rel="noopener"><b>{{ v.title }}</b><small>{{ v.description or '' }}</small><span>Regarder →</span></a>{% else %}<p class="muted">Aucune ancienne vidéo publiée pour le moment.</p>{% endfor %}</div>
+</section>{% endblock %}

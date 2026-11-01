@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block content %}<section class="page"><div class="section-head"><div><p class="eyebrow">ESPACE SÉCURISÉ</p><h1>Administration</h1></div><a href="{{ url_for('admin_logout') }}">Déconnexion</a></div><div class="stats"><div><b>{{ channels|length }}</b><small>Chaînes</small></div><div><b>{{ submissions|length }}</b><small>Propositions</small></div><div><b>{{ ads|length }}</b><small>Publicités</small></div></div>
+<h2>Ajouter une chaîne</h2><form class="form gridform" method="post" action="{{ url_for('add_channel') }}"><label>Nom<input name="name" required></label><label>Catégorie<select name="category"><option>Actualités</option><option>Sport</option><option>Divertissement</option><option>Cinéma</option></select></label><label>Lien vidéo / embed<input name="stream_url" type="url" required></label><label>Logo (URL)<input name="logo_url" type="url"></label><label class="wide">Description<textarea name="description"></textarea></label><button>Ajouter la chaîne</button></form>
+<h2>Chaînes existantes et liens de partage</h2>{% for c in channels %}<div class="line"><b>{{ c.name }}</b><span>{{ c.category or '' }}</span><form method="post" action="{{ url_for('delete_channel', channel_id=c.id) }}" onsubmit="return confirm('Supprimer cette chaîne ?')"><button class="danger">Supprimer</button></form></div>{% else %}<p class="muted">Aucune chaîne.</p>{% endfor %}
+<h2>Propositions des diffuseurs</h2>{% for s in submissions %}<div class="line"><div><b>{{ s.channel_name }}</b><small>{{ s.contact_email }} · {{ s.stream_url }}</small></div><span>{{ s.status or 'pending' }}</span><form method="post" action="{{ url_for('review_submission', submission_id=s.id) }}"><select name="status"><option value="pending">En attente</option><option value="approved">Approuver</option><option value="rejected">Refuser</option></select><button>Valider</button></form></div>{% else %}<p class="muted">Aucune proposition.</p>{% endfor %}
+<h2>Ajouter une publicité</h2><form class="form gridform" method="post" action="{{ url_for('add_ad') }}"><label>Entreprise<input name="company_name" required></label><label>URL vidéo publicitaire<input name="video_url" type="url" required></label><label>Lien de contact annonceur<input name="target_url" type="url" required></label><label>Emplacement<select name="placement"><option value="home">Accueil</option><option value="live">Page direct</option></select></label><button>Ajouter la publicité</button></form>
+
+<h2>Ajouter une ancienne vidéo</h2>
+<p class="muted">Colle un lien vidéo hébergé sur un service autorisant l'intégration (par exemple une vidéo YouTube publique).</p>
+<form class="form gridform" method="post" action="{{ url_for('add_video') }}">
+<label>Chaîne<select name="channel_id">{% for c in channels %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></label>
+<label>Titre<input name="title" required></label>
+<label class="wide">Lien vidéo<input name="video_url" type="url" required></label>
+<label class="wide">Description<textarea name="description"></textarea></label>
+<button>Ajouter à l'archive</button></form>
+</section>{% endblock %}
