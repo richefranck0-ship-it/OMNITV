@@ -5,7 +5,7 @@ Serveur Backend Flask de Production optimisé pour 1M d'utilisateurs avec CDN & 
 import os
 import secrets
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, abort
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,12 +13,11 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
 
-# Configuration Cloudinary
 CLOUDINARY_CLOUD = os.getenv('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_KEY = os.getenv('CLOUDINARY_API_KEY', '')
 CLOUDINARY_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')
 
-# Helper pour simuler / interagir avec Supabase
+# Helper Supabase
 def get_supabase_client():
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
@@ -69,14 +68,12 @@ def broadcaster():
 
 @app.route('/api/channels', methods=['GET'])
 def api_channels():
-    # Cache headers pour CDN et millions de spectateurs
-    response = jsonify({"status": "ok", "message": "Channels list"})
+    response = jsonify({"status": "ok", "message": "Bouquet de chaînes HLS actif", "channels": []})
     response.headers['Cache-Control'] = 'public, max-age=60'
     return response
 
 @app.route('/api/upload-media', methods=['POST'])
 def api_upload_media():
-    """Upload sécurisé vers Cloudinary avec vérification MIME et taille côté serveur"""
     if not session.get('is_admin'):
         return jsonify({"error": "Non autorisé"}), 403
     
@@ -84,13 +81,11 @@ def api_upload_media():
         return jsonify({"error": "Aucun fichier fourni"}), 400
         
     file = request.files['file']
-    # Vérification du type
     allowed_exts = {'png', 'jpg', 'jpeg', 'webp', 'mp4'}
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
     if ext not in allowed_exts:
         return jsonify({"error": "Format non supporté"}), 400
 
-    # Si Cloudinary configuré
     if CLOUDINARY_CLOUD and CLOUDINARY_KEY and CLOUDINARY_SECRET:
         try:
             import cloudinary
@@ -111,11 +106,11 @@ def api_upload_media():
     
     return jsonify({
         "status": "mock",
-        "message": "Cloudinary non configuré dans les variables d'environnement. Simulé avec succès."
+        "message": "Cloudinary simulé en mémoire."
     })
 
 # ============================================================
-# ESPACE ADMINISTRATEUR SÉCURISÉ CÔTÉ SERVEUR
+# ESPACE ADMINISTRATEUR SÉCURISÉ CÔTÉ SERVEUR (PIN 3004)
 # ============================================================
 
 @app.route('/admin', methods=['GET', 'POST'])
