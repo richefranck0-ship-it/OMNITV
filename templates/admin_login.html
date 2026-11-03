@@ -1,1 +1,24 @@
-{% extends "base.html" %}{% block content %}<section class="page narrow"><h1>Administration OMNITV</h1><form method="post" class="form"><label>E-mail<input type="email" name="email" required></label><label>Mot de passe<input type="password" name="password" required></label><button>Se connecter</button></form></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Connexion Administrateur — OMNITv{% endblock %}
+{% block content %}
+<div class="min-h-[500px] flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 text-center text-white shadow-2xl">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 mx-auto text-2xl">
+      🔒
+    </div>
+    <div class="space-y-1">
+      <h2 class="text-xl font-bold tracking-tight">Espace Administrateur OMNITv</h2>
+      <p class="text-xs text-slate-400">Entrez le mot de passe pour déverrouiller la console.</p>
+    </div>
+    {% if error %}
+      <p class="text-xs text-rose-400 font-bold">{{ error }}</p>
+    {% endif %}
+    <form method="POST" class="space-y-4">
+      <input autoFocus type="password" name="pin" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-center text-lg tracking-[0.35em] text-white focus:outline-none font-mono">
+      <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-bold text-xs uppercase shadow-md transition">
+        Déverrouiller (Code: 3004)
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

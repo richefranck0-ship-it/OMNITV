@@ -1,1 +1,16 @@
-{% extends "base.html" %}{% block content %}<section class="page narrow"><h1>Espace diffuseur</h1><p>Propose ta chaîne. Chaque lien est vérifié avant publication.</p><form method="post" class="form"><label>Nom de la chaîne<input name="channel_name" required></label><label>Lien du flux ou de l'intégration autorisée<input name="stream_url" type="url" required placeholder="https://..."></label><label>E-mail de contact<input name="contact_email" type="email" required></label><label>Description<textarea name="description" rows="4"></textarea></label><button>Envoyer ma proposition</button></form></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Proposer une Chaîne — OMNITv{% endblock %}
+{% block content %}
+<div class="space-y-6 max-w-3xl mx-auto">
+  <div class="border-b border-slate-200 pb-3">
+    <h1 class="text-2xl font-extrabold text-slate-900">Diffusez votre Chaîne sur OMNITv</h1>
+    <p class="text-xs text-slate-500">Proposez votre flux HLS ou MP4 pour être validé par l'administrateur.</p>
+  </div>
+  <form class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3 text-xs" onsubmit="event.preventDefault(); alert('Proposition soumise pour validation !');">
+    <input required type="text" placeholder="Nom de la chaîne TV" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+    <input required type="url" placeholder="URL du flux HLS (https://.../stream.m3u8)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+    <textarea rows="3" placeholder="Ligne éditoriale..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"></textarea>
+    <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl">Soumettre</button>
+  </form>
+</div>
+{% endblock %}

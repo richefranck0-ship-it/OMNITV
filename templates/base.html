@@ -1,21 +1,24 @@
 <!doctype html>
-<html lang="fr" class="dark">
+<html lang="fr" class="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>{% block title %}OMNITv — THE WORLD. ONE SCREEN.{% endblock %}</title>
   <!-- BALISE GOOGLE SEARCH CONSOLE OFFICIELLE OBLIGATOIRE -->
   <meta name="google-site-verification" content="omnitv_gsc_live_broadcast_verification_token_official" />
   <meta name="description" content="OMNITv - Télévision mondiale en direct, films, séries, studio live broadcast et guide des programmes sans inscription requise.">
-  <link rel="stylesheet" href="/static/css/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#ffffff">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body class="bg-[#06070a] text-zinc-100 min-h-screen flex flex-col font-sans">
+<body class="bg-white text-slate-900 min-h-screen flex flex-col font-sans antialiased pb-20 lg:pb-0">
   {% include 'components/navbar.html' %}
-  <main class="flex-1">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
     {% block content %}{% endblock %}
   </main>
   {% include 'components/footer.html' %}
+  <script src="/static/js/main.js"></script>
 </body>
 </html>

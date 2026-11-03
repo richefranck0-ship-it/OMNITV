@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Studio Caméra TikTok Live — OMNITv{% endblock %}
+{% block content %}
+<div class="space-y-6 text-slate-900">
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+    <div>
+      <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white">STUDIO LIVE TIKTOK</span>
+      <h1 class="text-2xl font-bold mt-1">Filmer & Diffuser en Direct Caméra</h1>
+      <p class="text-xs text-slate-300">Activez votre webcam ou caméra smartphone pour diffuser sur le canal Direct.</p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="btn-flip" onclick="flipCamera()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5">
+        <span>🔄 Tourner la Caméra</span>
+      </button>
+      <a href="/admin/dashboard" class="px-3 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl">Retour</a>
+    </div>
+  </div>
+
+  <div class="flex justify-center">
+    <div class="relative bg-black rounded-3xl overflow-hidden border-2 border-indigo-500/40 shadow-2xl w-full max-w-md aspect-[9/16] min-h-[580px] flex items-center justify-center">
+      <video id="studio-camera-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+      <div id="standby-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white bg-slate-950/80 space-y-3">
+        <div class="text-4xl">📹</div>
+        <h3 class="text-base font-bold">Caméra en attente</h3>
+        <p class="text-xs text-slate-400">Cliquez pour allumer la caméra et démarrer le direct.</p>
+        <button onclick="startLiveCamera()" class="px-6 py-3 bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-bold text-xs uppercase rounded-2xl shadow-lg transition">
+          Démarrer le Direct
+        </button>
+      </div>
+
+      <!-- TikTok Overlays -->
+      <div id="live-overlay" class="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-auto hidden">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white flex items-center space-x-1.5 shadow-md">
+          <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+          <span>LIVE</span>
+        </span>
+        <button onclick="flipCamera()" class="p-2.5 rounded-2xl bg-black/60 text-white backdrop-blur-md border border-white/20 text-xs font-bold flex items-center space-x-1">
+          <span>🔄 Tourner</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStream = null;
+let currentFacingMode = 'user';
+
+async function startLiveCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode },
+      audio: true
+    });
+    currentStream = stream;
+    const video = document.getElementById('studio-camera-video');
+    video.srcObject = stream;
+    document.getElementById('standby-overlay').classList.add('hidden');
+    document.getElementById('live-overlay').classList.remove('hidden');
+  } catch(e) {
+    alert("Erreur caméra : " + e.message);
+  }
+}
+
+async function flipCamera() {
+  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+  }
+  await startLiveCamera();
+}
+</script>
+{% endblock %}
