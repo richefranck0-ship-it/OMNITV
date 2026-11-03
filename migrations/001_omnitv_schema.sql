@@ -3,7 +3,6 @@
 -- Conforme au cahier des charges : 9 tables existantes + RLS
 -- ============================================================
 
--- 1. Profiles & Rôles
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
@@ -11,7 +10,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 2. Chaînes TV & Directs
 CREATE TABLE IF NOT EXISTS public.channels (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -30,7 +28,6 @@ CREATE TABLE IF NOT EXISTS public.channels (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 3. Submissions (Propositions de chaînes/contenus)
 CREATE TABLE IF NOT EXISTS public.submissions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -46,12 +43,12 @@ CREATE TABLE IF NOT EXISTS public.submissions (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 4. Advertisements (Campagnes et régie pub)
 CREATE TABLE IF NOT EXISTS public.advertisements (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   company_name TEXT,
   description TEXT,
+  media_type TEXT DEFAULT 'video' CHECK (media_type IN ('video', 'image')),
   video_url TEXT,
   image_url TEXT,
   contact_url TEXT,
@@ -67,7 +64,6 @@ CREATE TABLE IF NOT EXISTS public.advertisements (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 5. Schedules (Grille des programmes TV)
 CREATE TABLE IF NOT EXISTS public.schedules (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   channel_name TEXT NOT NULL,
@@ -76,12 +72,12 @@ CREATE TABLE IF NOT EXISTS public.schedules (
   category TEXT,
   description TEXT,
   poster_url TEXT,
+  video_url TEXT,
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 6. Comments (Commentaires et chat live)
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   channel_id UUID REFERENCES public.channels(id) ON DELETE CASCADE,
@@ -91,23 +87,6 @@ CREATE TABLE IF NOT EXISTS public.comments (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 7. Analytics (Statistiques respectueuses de la vie privée)
-CREATE TABLE IF NOT EXISTS public.analytics (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  event TEXT NOT NULL,
-  target_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- 8. Favorites (Favoris spectateurs)
-CREATE TABLE IF NOT EXISTS public.favorites (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID,
-  channel_id UUID REFERENCES public.channels(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- 9. Videos (Catalogue Films & VOD)
 CREATE TABLE IF NOT EXISTS public.videos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   channel_id UUID REFERENCES public.channels(id) ON DELETE SET NULL,
@@ -127,19 +106,14 @@ CREATE TABLE IF NOT EXISTS public.videos (
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- ============================================================
--- INDEXATION POUR SCALE 1 MILLION D'UTILISATEURS
--- ============================================================
+-- Indexation
 CREATE INDEX IF NOT EXISTS idx_channels_slug ON public.channels(slug);
 CREATE INDEX IF NOT EXISTS idx_channels_is_live ON public.channels(is_live) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_schedules_time ON public.schedules(starts_at, ends_at);
 CREATE INDEX IF NOT EXISTS idx_videos_public ON public.videos(is_public, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ads_active ON public.advertisements(is_active, placement);
 
--- ============================================================
--- SÉCURITÉ ROW LEVEL SECURITY (RLS)
--- Lecture publique sans compte / Écriture réservée aux admins
--- ============================================================
+-- RLS
 ALTER TABLE public.channels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
