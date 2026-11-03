@@ -1,13 +1,21 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}OMNITv — THE WORLD. ONE SCREEN.{% endblock %}</title>
-<meta name="description" content="OMNITv : regardez la télévision en direct, les films, les séries et vos programmes de divertissement.">
-<meta name="theme-color" content="#07142f">
-<meta name="google-site-verification" content="Oy5s9otOe8sxFdI3n0xWRFn3Cn5y5QoJQltjBD0jGxk" />
-<link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='favicon.png') }}">
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
-<body><header class="top"><a class="brand" href="{{ url_for('home') }}">OMNI<span>TV</span></a><nav><a href="{{ url_for('direct') }}">Direct</a><a href="{{ url_for('programme') }}">Programme TV</a><a href="{{ url_for('broadcaster') }}">Diffuseur</a><a href="{{ url_for('advertising') }}">Publicité</a></nav></header>
-<main>{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
-<footer>© 2026 OMNITv · THE WORLD. ONE SCREEN. · Fait avec passion par Franck ❤️ · <a href="mailto:{{ 'richefranck0@gmail.com' }}">Nous contacter</a></footer></body></html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}OMNITv — THE WORLD. ONE SCREEN.{% endblock %}</title>
+  <!-- BALISE GOOGLE SEARCH CONSOLE OFFICIELLE OBLIGATOIRE -->
+  <meta name="google-site-verification" content="omnitv_gsc_live_broadcast_verification_token_official" />
+  <meta name="description" content="OMNITv - Télévision mondiale en direct, films, séries, studio live broadcast et guide des programmes sans inscription requise.">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body class="bg-[#06070a] text-zinc-100 min-h-screen flex flex-col font-sans">
+  {% include 'components/navbar.html' %}
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+  {% include 'components/footer.html' %}
+</body>
+</html>
