@@ -1,58 +1,6 @@
-{% extends "base.html" %}
-{% block content %}
-
-<section class="hero">
-    <p class="eyebrow">LE MONDE · UN SEUL ÉCRAN</p>
-    <h1>THE WORLD.<br><span>ONE SCREEN.</span></h1>
-    <p>Regarde des chaînes et des contenus du monde entier, au même endroit.</p>
-    <div class="actions">
-        <a class="btn" href="{{ url_for('direct') }}">Regarder maintenant</a>
-        <a class="btn secondary" href="{{ url_for('broadcaster') }}">Proposer une chaîne</a>
-    </div>
-</section>
-
-<form class="search" action="{{ url_for('search') }}">
-    <input name="q" placeholder="Rechercher une chaîne..." required>
-    <button>Rechercher</button>
-</form>
-
-<section>
-    <div class="section-head">
-        <h2>À découvrir</h2>
-        <a href="{{ url_for('direct') }}">Tout voir →</a>
-    </div>
-
-    <div class="cards">
-        {% for c in channels %}
-        <a class="channel" href="{{ url_for('watch', channel_id=c.id) }}">
-            {% if c.logo_url %}
-                <img src="{{ c.logo_url }}" alt="">
-            {% else %}
-                <div class="placeholder">▶</div>
-            {% endif %}
-            <b>{{ c.name }}</b>
-            <small>{{ c.category or 'En direct' }}</small>
-        </a>
-        {% else %}
-        <p class="muted">Les chaînes seront affichées ici après leur ajout et validation dans l'administration.</p>
-        {% endfor %}
-    </div>
-</section>
-
-{% if ads %}
-<section>
-    <h2>Publicités partenaires</h2>
-    <div class="cards">
-        {% for ad in ads %}
-        <a class="ad" href="{{ ad.target_url }}" target="_blank" rel="noopener">
-            <b>{{ ad.company_name }}</b>
-            <p>Découvrir l'annonceur →</p>
-        </a>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<meta name="google-site-verification" content="Oy5s9otOe8sxFdI3n0xWRFn3Cn5y5QoJQltjBD0jGxk" />
-
+{% extends "base.html" %}{% block content %}
+<section class="hero"><p class="eyebrow">LE MONDE · UN SEUL ÉCRAN</p><h1>THE WORLD.<br><span>ONE SCREEN.</span></h1><p>Regarde des chaînes et des contenus du monde entier, au même endroit.</p><div class="actions"><a class="btn" href="{{ url_for('direct') }}">Regarder maintenant</a><a class="btn secondary" href="{{ url_for('broadcaster') }}">Proposer une chaîne</a></div></section>
+<form class="search" action="{{ url_for('search') }}"><input name="q" placeholder="Rechercher une chaîne..." required><button>Rechercher</button></form>
+<section><div class="section-head"><h2>À découvrir</h2><a href="{{ url_for('direct') }}">Tout voir →</a></div><div class="cards">{% for c in channels %}<a class="channel" href="{{ url_for('watch', channel_id=c.id) }}">{% if c.logo_url %}<img src="{{ c.logo_url }}" alt="">{% else %}<div class="placeholder">▶</div>{% endif %}<b>{{ c.name }}</b><small>{{ c.category or 'En direct' }}</small></a>{% else %}<p class="muted">Les chaînes seront affichées ici après leur ajout et validation dans l'administration.</p>{% endfor %}</div></section>
+{% if ads %}<section><h2>Publicités partenaires</h2><div class="cards">{% for ad in ads %}<a class="ad" href="{{ ad.target_url }}" target="_blank" rel="noopener"><b>{{ ad.company_name }}</b><p>Découvrir l'annonceur →</p></a>{% endfor %}</div></section>{% endif %}
 {% endblock %}

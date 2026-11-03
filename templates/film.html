@@ -1,60 +1,37 @@
-{% extends "base.html" %}
-{% from "_ad_slot.html" import ad_slot %}
-{% block title %}{{ video.title }} · OMNITV{% endblock %}
-{% block content %}
-<section class="page">
-  <p><a href="{{ url_for('channel_page', slug=channel.slug) }}">← Retour à {{ channel.name }}</a></p>
-  <h1>{{ video.title }}</h1>
-  <div class="watch-layout">
-    <div class="watch-main">
-      <div class="player video-player" id="film-player" data-stream-url="{{ video.video_url|e }}">
-        <video id="film-video" controls playsinline preload="metadata"></video>
-        <div class="player-message" id="film-player-message">Chargement du film…</div>
-      </div>
-      <p class="muted">{{ video.description or '' }}</p>
-      <div id="film-ended" class="film-ended" hidden>
-        <h2>Le film est terminé</h2>
-        <p>Merci d'avoir regardé OMNITv. Découvrez nos partenaires avant de revenir au catalogue.</p>
-        {{ ad_slot(ads, 'end', 'film-end-ad-slot') }}
-        <a class="btn" href="{{ url_for('channel_page', slug=channel.slug) }}">Retour à la chaîne</a>
-      </div>
-      {{ ad_slot(ads, 'all', 'film-ad-slot') }}
-    </div>
-    <div class="watch-sidebar">{{ ad_slot(ads, 'all', 'film-side-ad-slot') }}</div>
-  </div>
-</section>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script>
+{% extends "base.html" %}{% from "_ad_slot.html" import ad_slot %}{% block title %}{{ video.title }} · OMNITV{% endblock %}{% block content %}
+<section class="page"><p><a href="{{ url_for('channel_page', slug=channel.slug) }}">← Retour à {{ channel.name }}</a></p><h1>{{ video.title }}</h1>
+{% if video.image_url %}<img src="{{ video.image_url }}" alt="Affiche {{ video.title }}" style="width:min(220px,55%);border-radius:12px;margin-bottom:14px">{% endif %}
+<div class="watch-layout"><div class="watch-main">
+<div class="player video-player" id="film-player" data-stream-url="{{ video.video_url|e }}"><video id="film-video" controls playsinline preload="metadata"></video><div class="player-message" id="film-player-message">Chargement du film…</div>
+<div id="midroll-overlay" hidden style="position:absolute;inset:0;background:#030912;z-index:5;display:none;align-items:center;justify-content:center;padding:18px;text-align:center;color:white"><div><p style="color:#f4c85b;font-weight:800">PUBLICITÉ OMNITv</p><div id="midroll-ad-media"></div><p id="midroll-countdown">Reprise du film dans 90 secondes</p><button type="button" id="skip-midroll" class="btn secondary" hidden>Reprendre le film</button></div></div></div>
+<p class="muted">{{ video.description or '' }}</p>
+<div id="film-ended" class="film-ended" hidden><h2>Le film est terminé</h2><p>Merci d'avoir regardé OMNITv. Découvrez nos partenaires avant de revenir au catalogue.</p>{{ ad_slot(ads, 'end', 'film-end-ad-slot') }}<a class="btn" href="{{ url_for('channel_page', slug=channel.slug) }}">Retour à la chaîne</a></div>
+</div><div class="watch-sidebar">{{ ad_slot(ads, 'all', 'film-side-ad-slot') }}</div></div></section>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script><script>
 (() => {
-  const box=document.getElementById('film-player'), video=document.getElementById('film-video');
-  const msg=document.getElementById('film-player-message'), url=box.dataset.streamUrl;
-  const ended=document.getElementById('film-ended');
-  const yt=url.match(/(?:youtube\\.com\\/(?:watch\\?v=|embed\\/)|youtu\\.be\\/)([\\w-]{11})/);
-  const showEnd=()=>{ended.hidden=false;ended.scrollIntoView({behavior:'smooth',block:'start'});};
-  if(yt){
-    const frame=document.createElement('iframe');frame.id='omnitv-youtube-film';frame.src='https://www.youtube-nocookie.com/embed/'+yt[1]+'?enablejsapi=1&origin='+encodeURIComponent(location.origin);
-    frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);
-    window.onYouTubeIframeAPIReady=()=>{new YT.Player(frame.id,{events:{onStateChange:e=>{if(e.data===0)showEnd();}}});};
-    const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
-    msg.textContent='Lecture du film intégré…';
-  } else if(/\\.m3u8(?:$|\\?)/i.test(url)){
-    if(video.canPlayType('application/vnd.apple.mpegurl')) video.src=url;
-    else if(window.Hls && Hls.isSupported()){const hls=new Hls();hls.loadSource(url);hls.attachMedia(video);}
-    else msg.textContent='Ce navigateur ne prend pas en charge ce flux HLS.';
-  } else if(/\\.(mp4|webm|ogg)(?:$|\\?)/i.test(url)){video.src=url;}
-  else {const frame=document.createElement('iframe');frame.src=url;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);}
-  video.addEventListener('loadeddata',()=>msg.hidden=true);
-  video.addEventListener('error',()=>{msg.textContent='Impossible de lire cette vidéo. Vérifie le lien et les droits d’intégration.';});
-  video.addEventListener('ended',showEnd);
+ const box=document.getElementById('film-player'), video=document.getElementById('film-video'), msg=document.getElementById('film-player-message'), url=box.dataset.streamUrl, ended=document.getElementById('film-ended');
+ const midrollAfter={{ (video.midroll_after_seconds or 0)|int }};
+ const midrollAds={{ ads|selectattr('placement','equalto','midroll')|list|tojson }};
+ let midrollDone=false, adTimer=null, resumeAt=0;
+ const overlay=document.getElementById('midroll-overlay'), countdown=document.getElementById('midroll-countdown'), media=document.getElementById('midroll-ad-media'), skip=document.getElementById('skip-midroll');
+ function startMidroll(){ if(midrollDone || !midrollAds.length)return; midrollDone=true; resumeAt=video.currentTime; video.pause(); overlay.hidden=false; overlay.style.display='flex';
+   const ad=midrollAds[0]; media.replaceChildren();
+   if(ad.image_url){const img=document.createElement('img');img.src=ad.image_url;img.alt='Publicité';img.style.cssText='max-width:100%;max-height:35vh;object-fit:contain';media.appendChild(img);}
+   if(ad.video_url){const av=document.createElement('video');av.src=ad.video_url;av.autoplay=true;av.muted=true;av.playsInline=true;av.controls=true;av.style.cssText='width:min(560px,80vw);max-height:35vh';media.appendChild(av);}
+   if(ad.target_url){const a=document.createElement('a');a.href=ad.target_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Découvrir l’annonceur';a.className='btn';media.appendChild(a);}
+   let left=90; countdown.textContent='Reprise du film dans '+left+' secondes';
+   adTimer=setInterval(()=>{left--;countdown.textContent='Reprise du film dans '+left+' secondes';if(left<=0)finishMidroll();},1000);
+ }
+ function finishMidroll(){if(adTimer)clearInterval(adTimer);overlay.hidden=true;overlay.style.display='none';media.replaceChildren();video.currentTime=resumeAt;video.play().catch(()=>{});}
+ skip.addEventListener('click',finishMidroll);
+ const yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+ const showEnd=()=>{ended.hidden=false;ended.scrollIntoView({behavior:'smooth',block:'start'});};
+ if(yt){const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+yt[1]+'?enablejsapi=1&origin='+encodeURIComponent(location.origin);frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);msg.textContent='Lecture intégrée. Les coupures automatiques nécessitent un flux MP4 ou HLS compatible.';}
+ else if(/\.m3u8(?:$|\?)/i.test(url)){if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=url;else if(window.Hls&&Hls.isSupported()){const hls=new Hls();hls.loadSource(url);hls.attachMedia(video);}else msg.textContent='Ce navigateur ne prend pas en charge ce flux HLS.';}
+ else if(/\.(mp4|webm|ogg)(?:$|\?)/i.test(url)){video.src=url;}
+ else {const frame=document.createElement('iframe');frame.src=url;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;box.replaceChildren(frame);msg.textContent='Lecture intégrée. Les coupures automatiques dépendent des possibilités du fournisseur.';}
+ video.addEventListener('loadeddata',()=>msg.hidden=true);video.addEventListener('error',()=>{msg.textContent='Impossible de lire cette vidéo. Vérifie le lien et les droits d’intégration.';});video.addEventListener('timeupdate',()=>{if(midrollAfter>0&&!midrollDone&&video.currentTime>=midrollAfter)startMidroll();});video.addEventListener('ended',showEnd);
 })();
-document.querySelectorAll('.omni-ad-slot').forEach(slot=>{
-  const cards=[...slot.querySelectorAll('.omni-ad-card')]; if(cards.length<2)return;
-  let index=0; setInterval(()=>{cards[index].hidden=true;index=(index+1)%cards.length;cards[index].hidden=false;},900000);
-});
-document.querySelectorAll('.ad-video').forEach(box=>{
-  const url=box.dataset.adUrl||'', yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
-  if(yt){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+yt[1];f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;box.appendChild(f);}
-  else {const v=document.createElement('video');v.src=url;v.controls=true;v.muted=true;v.playsInline=true;v.preload='none';box.appendChild(v);}
-});
-</script>
-{% endblock %}
+document.querySelectorAll('.omni-ad-slot').forEach(slot=>{const cards=[...slot.querySelectorAll('.omni-ad-card')];if(cards.length<2)return;let index=0;setInterval(()=>{cards[index].hidden=true;index=(index+1)%cards.length;cards[index].hidden=false;},900000);});
+document.querySelectorAll('.ad-video').forEach(box=>{const url=box.dataset.adUrl||'',yt=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);if(yt){const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+yt[1];f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;box.appendChild(f);}else if(url){const v=document.createElement('video');v.src=url;v.controls=true;v.muted=true;v.playsInline=true;v.preload='none';box.appendChild(v);}});
+</script>{% endblock %}
