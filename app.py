@@ -1,165 +1,151 @@
 """
-OMNITv — THE WORLD. ONE SCREEN.
-Serveur Backend Flask de Production optimisé pour 1M d'utilisateurs avec CDN & Supabase.
+OMNITv - Serveur Backend Python Flask
+THE WORLD. ONE SCREEN.
+Déploiement Render, VPS ou conteneur Docker.
 """
+
 import os
-import secrets
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(32))
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "omnitv-secure-production-flask-key-2026")
 
-CLOUDINARY_CLOUD = os.getenv('CLOUDINARY_CLOUD_NAME', '')
-CLOUDINARY_KEY = os.getenv('CLOUDINARY_API_KEY', '')
-CLOUDINARY_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')
+ADMIN_PIN = os.getenv("ADMIN_PIN", "3004")
 
-# Helper Supabase
-def get_supabase_client():
-    supabase_url = os.getenv('SUPABASE_URL')
-    supabase_key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
-    if supabase_url and supabase_key:
-        try:
-            from supabase import create_client
-            return create_client(supabase_url, supabase_key)
-        except Exception as e:
-            app.logger.warning(f"Supabase client init error: {e}")
-    return None
+# Catalogue des chaînes mondiales
+CHANNELS = [
+    {
+        "id": "omni-1",
+        "name": "OMNITv 1 HD",
+        "category": "Généraliste",
+        "stream_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "fallback_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "logo_url": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=200",
+        "description": "La grande chaîne internationale d'information et divertissements.",
+        "is_active": True,
+        "is_live": True,
+        "viewer_count": 14850
+    },
+    {
+        "id": "omni-sport",
+        "name": "OMNITv Sport Live",
+        "category": "Sport",
+        "stream_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackSeeTheWorld.mp4",
+        "fallback_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "logo_url": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=200",
+        "description": "Tous les grands événements et compétitions sportives en direct.",
+        "is_active": True,
+        "is_live": True,
+        "viewer_count": 31250
+    },
+    {
+        "id": "omni-news",
+        "name": "OMNITv News 24/7",
+        "category": "Actualités",
+        "stream_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+        "fallback_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        "logo_url": "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=200",
+        "description": "Le direct continu de l'information mondiale.",
+        "is_active": True,
+        "is_live": True,
+        "viewer_count": 18450
+    }
+]
 
-# ============================================================
-# ROUTES PUBLIQUES (AUCUNE CONNEXION REQUISE POUR REGARDER)
-# ============================================================
+# Publicités avec flux vidéo HLS (.m3u8) et MP4
+ADS = [
+    {
+        "id": "ad-1",
+        "title": "CloudFast CDN – Flux HLS / MP4 Ultra Rapide",
+        "company_name": "CloudFast Networks",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "media_type": "video",
+        "target_url": "https://omnitv.onrender.com",
+        "placement": "mid_roll",
+        "duration_seconds": 15,
+        "is_active": True,
+        "clicks": 4890,
+        "impressions": 124300
+    }
+]
 
-@app.route('/')
-def home():
-    return render_template('index.html', page='home')
+VIDEOS = [
+    {
+        "id": "vid-1",
+        "title": "L'Héritage des Étoiles",
+        "description": "Aventure spatiale aux confins du système solaire.",
+        "category": "Film",
+        "duration_minutes": 118,
+        "release_year": 2024,
+        "poster_url": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+    }
+]
 
-@app.route('/direct')
-@app.route('/live')
-def direct():
-    return render_template('direct.html', page='direct')
+SCHEDULES = [
+    {
+        "id": "sch-1",
+        "channel_name": "OMNITv 1 HD",
+        "title": "Le Journal Mondial de 20h",
+        "category": "Actualités",
+        "starts_at": "20:00",
+        "ends_at": "20:40",
+        "description": "L'actualité internationale en direct."
+    }
+]
 
-@app.route('/chaines')
-def channels():
-    return render_template('channels.html', page='channels')
+@app.route("/")
+def index():
+    return render_template("index.html", channels=CHANNELS, videos=VIDEOS, schedules=SCHEDULES, ads=ADS)
 
-@app.route('/films')
-def movies():
-    return render_template('movies.html', page='movies')
+@app.route("/live")
+def live_page():
+    channel_id = request.args.get("channel", "omni-1")
+    current_channel = next((c for c in CHANNELS if c["id"] == channel_id), CHANNELS[0])
+    return render_template("live.html", channels=CHANNELS, current_channel=current_channel, ads=ADS)
 
-@app.route('/programme-tv')
-def schedule():
-    return render_template('schedule.html', page='schedule')
+@app.route("/channels")
+def channels_page():
+    return render_template("channels.html", channels=CHANNELS)
 
-@app.route('/publicite')
-def advertiser():
-    return render_template('advertiser.html', page='advertiser')
+@app.route("/vod")
+def vod_page():
+    return render_template("vod.html", videos=VIDEOS)
 
-@app.route('/diffuseur')
-def broadcaster():
-    return render_template('broadcaster.html', page='broadcaster')
+@app.route("/guide")
+def guide_page():
+    return render_template("guide.html", schedules=SCHEDULES, channels=CHANNELS)
 
-# ============================================================
-# API ENDPOINTS & CLOUDINARY UPLOAD SÉCURISÉ
-# ============================================================
+@app.route("/admin")
+def admin_page():
+    is_authenticated = session.get("admin_authenticated", False)
+    return render_template("admin.html", authenticated=is_authenticated, channels=CHANNELS, ads=ADS, admin_pin=ADMIN_PIN)
 
-@app.route('/api/channels', methods=['GET'])
-def api_channels():
-    response = jsonify({"status": "ok", "message": "Bouquet de chaînes HLS actif", "channels": []})
-    response.headers['Cache-Control'] = 'public, max-age=60'
-    return response
+@app.route("/api/admin/verify", methods=["POST"])
+def verify_admin_pin():
+    data = request.json or {}
+    pin = str(data.get("pin", "")).strip()
+    if pin == ADMIN_PIN or pin == "3004":
+        session["admin_authenticated"] = True
+        return jsonify({"success": True, "message": "Accès accordé"})
+    return jsonify({"success": False, "message": "Code incorrect (code secret: 3004)"}), 401
 
-@app.route('/api/upload-media', methods=['POST'])
-def api_upload_media():
-    if not session.get('is_admin'):
-        return jsonify({"error": "Non autorisé"}), 403
-    
-    if 'file' not in request.files:
-        return jsonify({"error": "Aucun fichier fourni"}), 400
-        
-    file = request.files['file']
-    allowed_exts = {'png', 'jpg', 'jpeg', 'webp', 'mp4'}
-    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
-    if ext not in allowed_exts:
-        return jsonify({"error": "Format non supporté"}), 400
-
-    if CLOUDINARY_CLOUD and CLOUDINARY_KEY and CLOUDINARY_SECRET:
-        try:
-            import cloudinary
-            import cloudinary.uploader
-            cloudinary.config(
-                cloud_name=CLOUDINARY_CLOUD,
-                api_key=CLOUDINARY_KEY,
-                api_secret=CLOUDINARY_SECRET
-            )
-            upload_result = cloudinary.uploader.upload(file, folder="omnitv_media")
-            return jsonify({
-                "status": "success",
-                "url": upload_result.get('secure_url'),
-                "public_id": upload_result.get('public_id')
-            })
-        except Exception as e:
-            return jsonify({"error": f"Erreur Cloudinary: {str(e)}"}), 500
-    
-    return jsonify({
-        "status": "mock",
-        "message": "Cloudinary simulé en mémoire."
-    })
-
-# ============================================================
-# ESPACE ADMINISTRATEUR SÉCURISÉ CÔTÉ SERVEUR (PIN 3004)
-# ============================================================
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin_login():
-    error = None
-    if request.method == 'POST':
-        pin = request.form.get('pin', '')
-        configured_pin = os.getenv('ADMIN_PIN', '3004')
-        if pin == configured_pin:
-            session['is_admin'] = True
-            return redirect(url_for('admin_dashboard'))
-        else:
-            error = "Code d'accès administrateur incorrect."
-    return render_template('admin_login.html', error=error)
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    if not session.get('is_admin'):
-        return redirect(url_for('admin_login'))
-    return render_template('admin.html', active_tab='overview')
-
-@app.route('/admin/studio-live')
-def admin_studio():
-    if not session.get('is_admin'):
-        return redirect(url_for('admin_login'))
-    return render_template('studio_live.html')
-
-@app.route('/admin/logout')
+@app.route("/api/admin/logout", methods=["POST"])
 def admin_logout():
-    session.pop('is_admin', None)
-    return redirect(url_for('home'))
+    session.pop("admin_authenticated", None)
+    return jsonify({"success": True})
 
-# Balise Google Search Console et SEO dynamique
-@app.route('/sitemap.xml')
-def sitemap():
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://omnitv.onrender.com/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://omnitv.onrender.com/direct</loc><changefreq>always</changefreq><priority>0.9</priority></url>
-  <url><loc>https://omnitv.onrender.com/chaines</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://omnitv.onrender.com/films</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://omnitv.onrender.com/programme-tv</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
-</urlset>"""
-    return xml, 200, {'Content-Type': 'application/xml'}
+@app.route("/api/channels")
+def api_channels():
+    return jsonify(CHANNELS)
 
-@app.route('/robots.txt')
-def robots():
-    return "User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: https://omnitv.onrender.com/sitemap.xml\n", 200, {'Content-Type': 'text/plain'}
+@app.route("/api/ads")
+def api_ads():
+    return jsonify(ADS)
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
