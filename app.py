@@ -2,7 +2,7 @@ import os
 import re
 import secrets
 from functools import wraps
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -232,27 +232,59 @@ def add_ad():
     video_url = request.form.get("video_url", "").strip()
     target_url = request.form.get("target_url", "").strip()
     placement = request.form.get("placement", "all")
-    if placement not in ("all", "end"):
+    image_url = request.form.get("image_url", "").strip()
+    if placement not in ("all", "end", "midroll"):
         placement = "all"
     payload = {
         "company_name": company,
         "title": company,
         "description": request.form.get("description", "").strip(),
         "video_url": video_url,
+        "image_url": image_url or None,
         "target_url": target_url,
         "contact_url": target_url,
         "placement": placement,
         "active": True,
         "is_active": True
     }
-    if not company or not video_url or not target_url:
-        flash("Remplis le nom, le lien vidéo et le lien de l'annonceur.", "error")
+    if not company or not (video_url or image_url) or not target_url:
+        flash("Ajoute le nom, au moins une image ou une vidéo, et le lien de l'annonceur.", "error")
     else:
         try:
             supabase.table("advertisements").insert(payload).execute()
             flash("Publicité ajoutée et activée.", "success")
         except Exception:
             flash("Ajout impossible. Exécute la nouvelle migration publicitaire dans Supabase.", "error")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/schedule", methods=["POST"])
+@admin_required
+def add_schedule():
+    if not db_required():
+        return redirect(url_for("admin"))
+    try:
+        start_value = request.form.get("starts_at", "").strip()
+        duration = int(request.form.get("duration_minutes", "0"))
+        if duration < 1 or duration > 10080:
+            raise ValueError("Durée invalide")
+        start_dt = datetime.fromisoformat(start_value)
+        end_dt = start_dt + timedelta(minutes=duration)
+        payload = {
+            "channel_name": request.form.get("channel_name", "").strip(),
+            "title": request.form.get("title", "").strip(),
+            "starts_at": start_dt.isoformat(),
+            "ends_at": end_dt.isoformat(),
+            "duration_minutes": duration,
+            "image_url": request.form.get("image_url", "").strip() or None,
+            "video_url": request.form.get("video_url", "").strip() or None
+        }
+        if not payload["title"] or not payload["channel_name"]:
+            raise ValueError("Titre et chaîne obligatoires")
+        supabase.table("schedules").insert(payload).execute()
+        flash("Programme planifié. L'heure de fin est calculée automatiquement.", "success")
+    except Exception:
+        flash("Programmation impossible. Vérifie la migration SQL, la date et la durée.", "error")
     return redirect(url_for("admin"))
 
 
@@ -347,6 +379,9 @@ def add_video():
         "title": request.form.get("title", "").strip(),
         "description": request.form.get("description", "").strip(),
         "video_url": request.form.get("video_url", "").strip(),
+        "image_url": request.form.get("image_url", "").strip() or None,
+        "duration_minutes": int(request.form.get("duration_minutes") or 0) or None,
+        "midroll_after_seconds": int(request.form.get("midroll_after_seconds") or 0) or None,
         "is_public": True
     }
     try:
