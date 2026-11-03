@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Films & Séries – OMNITv{% endblock %}
+{% block content %}
+<div class="page-container">
+  <h1 class="page-title">Films & Séries VOD</h1>
+  <p class="page-subtitle">Streaming gratuit haute définition sans création de compte.</p>
+  <div class="vod-grid">
+    {% for vid in videos %}
+    <div class="vod-card">
+      <img src="{{ vid.poster_url }}" alt="{{ vid.title }}" class="vod-poster" />
+      <h4 class="vod-title">{{ vid.title }}</h4>
+      <span class="vod-meta">{{ vid.duration_minutes }} min · {{ vid.category }} · {{ vid.release_year }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

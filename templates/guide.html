@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Guide TV – OMNITv{% endblock %}
+{% block content %}
+<div class="page-container">
+  <h1 class="page-title">Guide TV & Grille des Programmes</h1>
+  <p class="page-subtitle">Horaires en temps réel et programmation des émissions.</p>
+  <div class="schedules-list">
+    {% for sch in schedules %}
+    <div class="schedule-card">
+      <div class="sch-time">
+        <span class="time-start">{{ sch.starts_at }}</span>
+        <span class="time-end">{{ sch.ends_at }}</span>
+      </div>
+      <div class="sch-info">
+        <span class="sch-channel">{{ sch.channel_name }} · {{ sch.category }}</span>
+        <h3 class="sch-title">{{ sch.title }}</h3>
+        <p class="sch-desc">{{ sch.description }}</p>
+      </div>
+      <a href="/live" class="btn-watch-sch">Regarder</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,24 +1,79 @@
 <!doctype html>
 <html lang="fr" class="light">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>{% block title %}OMNITv — THE WORLD. ONE SCREEN.{% endblock %}</title>
-  <!-- BALISE GOOGLE SEARCH CONSOLE OFFICIELLE OBLIGATOIRE -->
-  <meta name="google-site-verification" content="omnitv_gsc_live_broadcast_verification_token_official" />
-  <meta name="description" content="OMNITv - Télévision mondiale en direct, films, séries, studio live broadcast et guide des programmes sans inscription requise.">
-  <meta name="theme-color" content="#ffffff">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body class="bg-white text-slate-900 min-h-screen flex flex-col font-sans antialiased pb-20 lg:pb-0">
-  {% include 'components/navbar.html' %}
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    {% block content %}{% endblock %}
-  </main>
-  {% include 'components/footer.html' %}
-  <script src="/static/js/main.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- BALISE GOOGLE SEARCH CONSOLE EXACTE CONSERVÉE -->
+    <meta name="google-site-verification" content="google4facfa90omnitvverification" />
+
+    <title>{% block title %}OMNITv – The World. One Screen.{% endblock %}</title>
+    <meta name="description" content="OMNITv est la plateforme internationale de télévision et streaming en direct. Accédez à vos chaînes TV, live immersif, films et guide des programmes sans inscription." />
+    <link rel="canonical" href="https://omnitv.onrender.com" />
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='omnitv-logo.svg') }}" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body class="bg-white text-slate-900 antialiased">
+    <header class="header">
+      <div class="header-container">
+        <a href="/" class="brand-zone">
+          <div class="logo-box">
+            <img src="{{ url_for('static', filename='omnitv-logo.svg') }}" alt="Logo" class="brand-logo" />
+          </div>
+          <div>
+            <div class="brand-name">OMNI<span class="text-rose">Tv</span> <span class="badge-direct">DIRECT</span></div>
+            <div class="brand-slogan">THE WORLD. ONE SCREEN.</div>
+          </div>
+        </a>
+
+        <div class="header-actions">
+          <a href="/live" class="btn-live-header">
+            <span class="ping-dot"></span>
+            <span>Lecteur Live</span>
+          </a>
+          <a href="/admin" class="btn-admin-header">
+            <span>Admin (3004)</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="bottom-nav-container">
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+          <span class="nav-icon">📺</span>
+          <span class="nav-label">Direct TV</span>
+        </a>
+        <a href="/live" class="nav-item special {% if request.path == '/live' %}active{% endif %}">
+          <div class="special-icon">🔴</div>
+          <span class="nav-label">Live</span>
+        </a>
+        <a href="/vod" class="nav-item {% if request.path == '/vod' %}active{% endif %}">
+          <span class="nav-icon">🎬</span>
+          <span class="nav-label">Films & Séries</span>
+        </a>
+        <a href="/guide" class="nav-item {% if request.path == '/guide' %}active{% endif %}">
+          <span class="nav-icon">📅</span>
+          <span class="nav-label">Guide TV</span>
+        </a>
+        <a href="/admin" class="nav-item {% if request.path == '/admin' %}active{% endif %}">
+          <span class="nav-icon">🔒</span>
+          <span class="nav-label">Admin</span>
+        </a>
+      </div>
+    </nav>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+  </body>
 </html>

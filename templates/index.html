@@ -1,39 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="space-y-10">
-  <!-- Hero Banner -->
-  <section class="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-slate-200 p-8 sm:p-12 shadow-xs">
-    <div class="max-w-3xl space-y-4">
-      <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 uppercase">Plateforme 1M Viewers</span>
-      <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-        Bienvenue sur <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">OMNITv</span>
-      </h1>
-      <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-        Télévision internationale en direct, films et séries HD sans inscription obligatoire. Filmez en direct avec votre caméra depuis le studio admin.
-      </p>
-      <div class="flex flex-wrap items-center gap-3 pt-2">
-        <a href="/direct" class="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-md transition">
-          🔴 Rejoindre le Direct TV
-        </a>
-        <a href="/admin" class="px-5 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm shadow-xs transition">
-          Studio Caméra (Admin)
-        </a>
-        <a href="/publicite" class="px-5 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs sm:text-sm transition">
-          Régie Publicitaire
-        </a>
+<div class="home-container">
+  <section class="hero-live">
+    <div class="player-frame">
+      <video id="homeVideoPlayer" src="{{ channels[0].stream_url }}" autoplay playsinline controls class="video-element"></video>
+      <div class="player-top-overlay">
+        <div class="live-badge"><span class="live-dot"></span><span>DIRECT TV</span></div>
       </div>
     </div>
+
+    <a href="/live" class="live-cta-card">
+      <div class="cta-content">
+        <span class="cta-kicker">🔴 LECTEUR LIVE DÉDIÉ</span>
+        <h2 class="cta-title">Regarder le Direct Plein Écran & Vertical</h2>
+        <p class="cta-desc">Accédez à toutes les chaînes mondiales et aux flux caméra en direct sans inscription.</p>
+      </div>
+      <div class="cta-arrow">➜</div>
+    </a>
   </section>
 
-  <!-- Bouquet Preview -->
-  <section class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-bold text-slate-900">Chaînes & Directs TV</h2>
-      <a href="/chaines" class="text-xs font-semibold text-indigo-600 hover:underline">Voir les chaînes →</a>
+  <section class="section">
+    <div class="section-header">
+      <h3 class="section-title">Chaînes en Direct</h3>
+      <a href="/channels" class="section-link">Toutes les chaînes</a>
     </div>
-    <div class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2">
-      <p class="text-xs text-slate-500">Aucune chaîne dans le catalogue pour l'instant. Ajoutez vos flux HLS (.m3u8) dans l'espace Admin.</p>
-      <a href="/admin" class="inline-block px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-xs">Ajouter une chaîne</a>
+    <div class="channels-grid">
+      {% for ch in channels %}
+      <a href="/live?channel={{ ch.id }}" class="channel-grid-card">
+        <img src="{{ ch.logo_url }}" alt="{{ ch.name }}" class="ch-grid-logo" />
+        <h4 class="ch-grid-name">{{ ch.name }}</h4>
+        <span class="ch-grid-cat">{{ ch.category }}</span>
+        <span class="ch-grid-live">● EN DIRECT</span>
+      </a>
+      {% endfor %}
     </div>
   </section>
 </div>

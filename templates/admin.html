@@ -1,38 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Console d'Administration — OMNITv{% endblock %}
+{% block title %}Administration – OMNITv (Code 3004){% endblock %}
 {% block content %}
-<div class="space-y-6">
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between text-white shadow-xl">
-    <div>
-      <h1 class="text-lg font-bold">Console Administrateur OMNITv</h1>
-      <p class="text-xs text-slate-400">Studio Caméra • Chaînes TV • Publicités • 1M Scalabilité</p>
-    </div>
-    <div class="flex items-center space-x-2">
-      <a href="/admin/studio-live" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5">
-        <span>🎥 Studio Caméra TikTok</span>
-      </a>
-      <a href="/admin/logout" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">
-        Verrouiller
-      </a>
-    </div>
-  </div>
+<div class="admin-container">
+  {% if not authenticated %}
+  <div class="pin-card">
+    <div class="lock-icon">🔒</div>
+    <h2 class="pin-title">Espace Administrateur OMNITv</h2>
+    <p class="pin-subtitle">Accès protégé par le code secret <strong>3004</strong></p>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Audience 1M</h3>
-      <div class="text-3xl font-extrabold text-slate-900">14,280</div>
-      <p class="text-xs text-emerald-600">Spectateurs simultanés actifs</p>
+    <div class="pin-dots">
+      <span class="dot" id="dot-0"></span>
+      <span class="dot" id="dot-1"></span>
+      <span class="dot" id="dot-2"></span>
+      <span class="dot" id="dot-3"></span>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Caméra Direct</h3>
-      <div class="text-sm font-bold text-slate-900">Studio Broadcast TikTok</div>
-      <a href="/admin/studio-live" class="text-xs text-indigo-600 font-bold hover:underline">Ouvrir le studio caméra →</a>
+
+    <div id="pinErrorMessage" class="pin-error"></div>
+
+    <div class="keypad">
+      <button class="key-btn" onclick="pressPin('1')">1</button>
+      <button class="key-btn" onclick="pressPin('2')">2</button>
+      <button class="key-btn" onclick="pressPin('3')">3</button>
+      <button class="key-btn" onclick="pressPin('4')">4</button>
+      <button class="key-btn" onclick="pressPin('5')">5</button>
+      <button class="key-btn" onclick="pressPin('6')">6</button>
+      <button class="key-btn" onclick="pressPin('7')">7</button>
+      <button class="key-btn" onclick="pressPin('8')">8</button>
+      <button class="key-btn" onclick="pressPin('9')">9</button>
+      <button class="key-btn key-clear" onclick="clearPin()">C</button>
+      <button class="key-btn" onclick="pressPin('0')">0</button>
+      <button class="key-btn key-del" onclick="deletePin()">⌫</button>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
-      <h3 class="text-xs font-bold uppercase text-slate-500">Régie Pubs</h3>
-      <div class="text-sm font-bold text-slate-900">Spots Vidéos & Images</div>
-      <a href="/publicite" class="text-xs text-indigo-600 font-bold hover:underline">Voir les demandes régie →</a>
+
+    <div class="quick-unlock">
+      <button onclick="quickUnlock3004()" class="btn-quick-unlock">Saisir automatiquement 3004</button>
     </div>
   </div>
+  {% else %}
+  <div class="admin-dashboard">
+    <div class="admin-header">
+      <div>
+        <h1 class="dash-title">Console d'Administration OMNITv</h1>
+        <p class="dash-desc">Connecté avec succès via le code PIN {{ admin_pin }}.</p>
+      </div>
+      <button onclick="logoutAdmin()" class="btn-logout">Verrouiller</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><span class="stat-num">47.4k</span><span class="stat-label">Spectateurs en direct</span></div>
+      <div class="stat-box"><span class="stat-num">{{ channels|length }}</span><span class="stat-label">Chaînes actives</span></div>
+      <div class="stat-box"><span class="stat-num">{{ ads|length }}</span><span class="stat-label">Campagnes publicitaires</span></div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Lecteur Live – OMNITv{% endblock %}
+{% block content %}
+<div class="live-container">
+  <div class="player-wrapper">
+    <div class="player-frame" id="livePlayerFrame">
+      <video id="omniLiveVideo" src="{{ current_channel.stream_url }}" autoplay playsinline controls class="video-element"></video>
+      <div class="player-top-overlay">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span>EN DIRECT</span>
+          <span class="viewers-count">👁️ {{ (current_channel.viewer_count / 1000)|round(1) }}k</span>
+        </div>
+        <button id="toggleVerticalBtn" class="btn-vertical-toggle" onclick="toggleVerticalPlayer()">
+          Format 9:16 Vertical
+        </button>
+      </div>
+    </div>
+
+    <div class="live-channel-meta">
+      <div class="channel-info">
+        <img src="{{ current_channel.logo_url }}" alt="{{ current_channel.name }}" class="channel-thumb" />
+        <div>
+          <h1 class="channel-title">{{ current_channel.name }}</h1>
+          <p class="channel-desc">{{ current_channel.description }}</p>
+        </div>
+      </div>
+      <div class="channel-actions">
+        <button class="btn-fav" onclick="toggleLocalFavorite('{{ current_channel.id }}')">❤️ Favori</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="zapping-section">
+    <h3 class="section-title">Zapping des Chaînes en Direct</h3>
+    <div class="channels-carousel">
+      {% for ch in channels %}
+      <a href="/live?channel={{ ch.id }}" class="channel-card {% if ch.id == current_channel.id %}active-channel{% endif %}">
+        <img src="{{ ch.logo_url }}" alt="{{ ch.name }}" class="card-logo" />
+        <div class="card-meta">
+          <span class="card-name">{{ ch.name }}</span>
+          <span class="card-cat">{{ ch.category }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
