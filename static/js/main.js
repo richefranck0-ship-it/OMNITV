@@ -43,7 +43,10 @@ function verifyPinCode(code) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: code })
-    }).then(() => window.location.reload());
+    }).finally(() => {
+      document.cookie = `omnitv_admin_pin=${code}; path=/; max-age=86400; SameSite=Lax`;
+      window.location.reload();
+    });
   } else {
     if (errorMsg) {
       errorMsg.style.color = '#ef4444';
@@ -54,7 +57,23 @@ function verifyPinCode(code) {
 }
 
 function logoutAdmin() {
-  fetch('/api/admin/logout', { method: 'POST' }).then(() => window.location.reload());
+  fetch('/api/admin/logout', { method: 'POST' }).finally(() => {
+    document.cookie = 'omnitv_admin_pin=; path=/; max-age=0; SameSite=Lax';
+    window.location.reload();
+  });
+}
+
+function switchAdminTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+  const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => 
+    b.getAttribute('onclick')?.includes(tabName)
+  );
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const targetContent = document.getElementById(`tab-${tabName}`);
+  if (targetContent) targetContent.classList.remove('hidden');
 }
 
 function toggleVerticalPlayer() {
@@ -73,4 +92,21 @@ function toggleLocalFavorite(channelId) {
     localStorage.setItem('omnitv_favorites', JSON.stringify(favs));
     alert('Favoris mis à jour !');
   } catch (e) { console.error(e); }
+}
+
+let flaskCameraStream = null;
+async function toggleFlaskCamera() {
+  const video = document.getElementById('flaskStudioVideo');
+  if (flaskCameraStream) {
+    flaskCameraStream.getTracks().forEach(t => t.stop());
+    flaskCameraStream = null;
+    if (video) video.srcObject = null;
+  } else {
+    try {
+      flaskCameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (video) video.srcObject = flaskCameraStream;
+    } catch (err) {
+      alert("Erreur d'accès à la caméra : " + err.message);
+    }
+  }
 }
