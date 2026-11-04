@@ -1,8 +1,8 @@
 # OMNITv — THE WORLD. ONE SCREEN.
 Plateforme internationale de télévision et streaming en direct.
 
-## Contenu de ce ZIP complet :
-1. **Frontend React + Vite** :
+## Contenu de ce ZIP 100% complet :
+1. **Frontend React 19 + TypeScript + Vite + Tailwind** (Dossier `src/`) :
    - Lecteur Live dédié avec commutation vertical 9:16 / paysage 16:9
    - Support streaming live HLS (.m3u8) et MP4
    - Studio Caméra en direct avec caméra avant/arrière et miroir
@@ -14,10 +14,10 @@ Plateforme internationale de télévision et streaming en direct.
    - `app.py` (Serveur complet avec routes publiques et admin)
    - `requirements.txt` (Flask, Gunicorn, etc.)
    - `Procfile` (Déploiement Render / VPS)
-   - `templates/` : `base.html`, `index.html`, `live.html`, `channels.html`, `vod.html`, `guide.html`, `admin.html`
+   - `templates/` : `base.html`, `index.html`, `live.html`, `channels.html`, `vod.html`, `guide.html`, `admin.html` (avec tous les onglets d'administration)
    - `static/` : `css/style.css`, `js/main.js`, `js/player.js`, `omnitv-logo.svg`
 
-3. **Base de données & Migrations** :
+3. **Base de données & Migrations SQL** :
    - `migrations/001_initial_schema.sql`
    - `migrations/002_live_streaming.sql`
    - `migrations/003_advertisements_hls.sql`

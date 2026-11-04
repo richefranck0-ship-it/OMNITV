@@ -122,7 +122,10 @@ def guide_page():
 @app.route("/admin")
 def admin_page():
     is_authenticated = session.get("admin_authenticated", False)
-    return render_template("admin.html", authenticated=is_authenticated, channels=CHANNELS, ads=ADS, admin_pin=ADMIN_PIN)
+    if not is_authenticated and request.cookies.get("omnitv_admin_pin") == ADMIN_PIN:
+        is_authenticated = True
+        session["admin_authenticated"] = True
+    return render_template("admin.html", authenticated=is_authenticated, channels=CHANNELS, videos=VIDEOS, schedules=SCHEDULES, ads=ADS, admin_pin=ADMIN_PIN)
 
 @app.route("/api/admin/verify", methods=["POST"])
 def verify_admin_pin():
