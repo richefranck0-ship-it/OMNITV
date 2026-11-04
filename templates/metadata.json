@@ -1,0 +1,6 @@
+{
+  "name": "OMNITv – Télévision & Streaming Mondial",
+  "description": "Plateforme internationale de télévision en direct et streaming. Chaînes mondiales, lecteur live vertical et cinéma, films, séries et guide TV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

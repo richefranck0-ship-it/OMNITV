@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Administration – OMNITv (Code 3004){% endblock %}
+{% block title %}Administration OMNITv – Code 3004{% endblock %}
 {% block content %}
 <div class="admin-container">
   {% if not authenticated %}
@@ -15,7 +15,7 @@
       <span class="dot" id="dot-3"></span>
     </div>
 
-    <div id="pinErrorMessage" class="pin-error"></div>
+    <div id="pinErrorMessage" class="pin-error" style="font-size: 0.8rem; font-weight: 700; min-height: 1.25rem; margin-top: 0.5rem;"></div>
 
     <div class="keypad">
       <button class="key-btn" onclick="pressPin('1')">1</button>
@@ -36,20 +36,174 @@
       <button onclick="quickUnlock3004()" class="btn-quick-unlock">Saisir automatiquement 3004</button>
     </div>
   </div>
+
   {% else %}
   <div class="admin-dashboard">
     <div class="admin-header">
       <div>
         <h1 class="dash-title">Console d'Administration OMNITv</h1>
-        <p class="dash-desc">Connecté avec succès via le code PIN {{ admin_pin }}.</p>
+        <p class="dash-desc">Connecté avec succès · Protégé par le code secret {{ admin_pin }}.</p>
       </div>
-      <button onclick="logoutAdmin()" class="btn-logout">Verrouiller</button>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <button onclick="window.location.reload()" class="btn-studio btn-studio-primary">
+          Actualiser
+        </button>
+        <button onclick="logoutAdmin()" class="btn-logout">Verrouiller</button>
+      </div>
     </div>
-    <div class="stats-row">
-      <div class="stat-box"><span class="stat-num">47.4k</span><span class="stat-label">Spectateurs en direct</span></div>
-      <div class="stat-box"><span class="stat-num">{{ channels|length }}</span><span class="stat-label">Chaînes actives</span></div>
-      <div class="stat-box"><span class="stat-num">{{ ads|length }}</span><span class="stat-label">Campagnes publicitaires</span></div>
+
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchAdminTab('overview')">Tableau de bord</button>
+      <button class="tab-btn" onclick="switchAdminTab('channels')">Chaînes TV ({{ channels|length }})</button>
+      <button class="tab-btn" onclick="switchAdminTab('ads')">Publicités HLS / MP4 ({{ ads|length }})</button>
+      <button class="tab-btn" onclick="switchAdminTab('studio')">Studio Caméra Live</button>
+      <button class="tab-btn" onclick="switchAdminTab('vod')">Films & Séries ({{ videos|length }})</button>
+      <button class="tab-btn" onclick="switchAdminTab('guide')">Guide TV ({{ schedules|length }})</button>
     </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div class="tab-content" id="tab-overview">
+      <div class="stats-row">
+        <div class="stat-box"><span class="stat-num">52.8k</span><span class="stat-label">Spectateurs en direct</span></div>
+        <div class="stat-box"><span class="stat-num">{{ channels|length }}</span><span class="stat-label">Chaînes TV Actives</span></div>
+        <div class="stat-box"><span class="stat-num">{{ ads|length }}</span><span class="stat-label">Campagnes Publicitaires</span></div>
+        <div class="stat-box"><span class="stat-num">{{ videos|length }}</span><span class="stat-label">Titres VOD Streaming</span></div>
+      </div>
+
+      <div class="admin-card">
+        <h3 class="card-title">État du Système OMNITv</h3>
+        <p class="card-desc">Informations et intégrations certifiées.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+          <div style="padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
+            <div style="font-weight: 800; font-size: 0.85rem;">Google Search Console</div>
+            <div style="color: #10b981; font-weight: 700; font-size: 0.75rem; margin-top: 0.25rem;">● Balise vérifiée active</div>
+            <div style="font-size: 0.7rem; color: var(--muted); font-family: monospace; margin-top: 0.25rem;">google4facfa90omnitvverification</div>
+          </div>
+          <div style="padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
+            <div style="font-weight: 800; font-size: 0.85rem;">Flux Vidéo & Publicités</div>
+            <div style="color: #10b981; font-weight: 700; font-size: 0.75rem; margin-top: 0.25rem;">● Support HLS (.m3u8) & MP4</div>
+            <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem;">Redirections partenaires actives</div>
+          </div>
+          <div style="padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
+            <div style="font-weight: 800; font-size: 0.85rem;">Code PIN Administrateur</div>
+            <div style="color: var(--text); font-weight: 800; font-size: 0.85rem; margin-top: 0.25rem;">Code actif : {{ admin_pin }}</div>
+            <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem;">Protection par session sécurisée</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CHANNELS -->
+    <div class="tab-content hidden" id="tab-channels">
+      <div class="admin-card">
+        <h3 class="card-title">Catalogue des Chaînes TV</h3>
+        <p class="card-desc">Gestion des flux stream en direct.</p>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Chaîne</th>
+                <th>Catégorie</th>
+                <th>Flux Stream HLS / MP4</th>
+                <th>Spectateurs</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ch in channels %}
+              <tr>
+                <td><strong>{{ ch.name }}</strong></td>
+                <td>{{ ch.category }}</td>
+                <td style="font-family: monospace; font-size: 0.7rem; color: var(--muted);">{{ ch.stream_url }}</td>
+                <td>{{ ch.viewer_count }}</td>
+                <td><span class="badge-active">● EN DIRECT</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ADS -->
+    <div class="tab-content hidden" id="tab-ads">
+      <div class="admin-card">
+        <h3 class="card-title">Campagnes Publicitaires Vidéo & Liens</h3>
+        <p class="card-desc">Publicités HLS / MP4 avec lien de destination du sponsor.</p>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Campagne</th>
+                <th>Annonceur</th>
+                <th>Lien Sponsorisé</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ad in ads %}
+              <tr>
+                <td><strong>{{ ad.title }}</strong></td>
+                <td>{{ ad.company_name }}</td>
+                <td><a href="{{ ad.target_url }}" target="_blank" style="color: var(--rose); font-weight: 700;">{{ ad.target_url }} ↗</a></td>
+                <td><span class="badge-active">ACTIVE</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: STUDIO -->
+    <div class="tab-content hidden" id="tab-studio">
+      <div class="admin-card">
+        <h3 class="card-title">Studio Caméra Live</h3>
+        <p class="card-desc">Diffusion en direct depuis la caméra de votre appareil.</p>
+        <div class="studio-box">
+          <video id="flaskStudioVideo" autoplay playsinline muted class="studio-video"></video>
+        </div>
+        <div class="studio-controls">
+          <button onclick="toggleFlaskCamera()" class="btn-studio btn-studio-primary">Démarrer Caméra</button>
+          <a href="/live" class="btn-studio">Voir sur le Lecteur Live</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: VOD -->
+    <div class="tab-content hidden" id="tab-vod">
+      <div class="admin-card">
+        <h3 class="card-title">Films & Séries VOD</h3>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Titre</th><th>Catégorie</th><th>Durée</th></tr></thead>
+            <tbody>
+              {% for vid in videos %}
+              <tr><td><strong>{{ vid.title }}</strong></td><td>{{ vid.category }}</td><td>{{ vid.duration_minutes }} min</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: GUIDE -->
+    <div class="tab-content hidden" id="tab-guide">
+      <div class="admin-card">
+        <h3 class="card-title">Grille des Programmes TV</h3>
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Horaire</th><th>Chaîne</th><th>Programme</th></tr></thead>
+            <tbody>
+              {% for sch in schedules %}
+              <tr><td><strong>{{ sch.starts_at }} - {{ sch.ends_at }}</strong></td><td>{{ sch.channel_name }}</td><td>{{ sch.title }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
   {% endif %}
 </div>
